@@ -152,38 +152,32 @@ class HuffmanCoding:
             f.write(map_bytes)
             f.write(text_bytes)
 
-    @staticmethod
-    def compress_file(input_filename, output_filename):
-        with open(input_filename, "rt") as f:
-            string = f.read()
-        huffman_tree = HuffmanCoding(string)
-        huffman_tree.compress_to_file(output_filename)
+def compress_file(input_filename, output_filename):
+    with open(input_filename, "rt") as f:
+        string = f.read()
+    huffman_tree = HuffmanCoding(string)
+    huffman_tree.compress_to_file(output_filename)
 
-    @staticmethod
-    def decompress_file(input_filename, output_filename):
-        with open(input_filename, "rb") as f:
-            pad_amount_read = int.from_bytes(f.read(1), "big")
-            map_size_read = f.read(4)
-            map_bytes_read = f.read(int.from_bytes(map_size_read, "big"))
-            compressed_text_bytes_read = f.read()
+def decompress_file(input_filename, output_filename):
+    with open(input_filename, "rb") as f:
+        pad_amount_read = int.from_bytes(f.read(1), "big")
+        map_size_read = f.read(4)
+        map_bytes_read = f.read(int.from_bytes(map_size_read, "big"))
+        compressed_text_bytes_read = f.read()
 
-        r = ""
-        for i in compressed_text_bytes_read:
-            r += format(i, '08b')
-        r = r[pad_amount_read::]
+    r = ""
+    for i in compressed_text_bytes_read:
+        r += format(i, '08b')
+    r = r[pad_amount_read::]
 
-        inv_map = json.loads(map_bytes_read)
-        temp = ""
-        output = ""
-        for i in r:
-            temp += i
-            if (temp in inv_map):
-                output += inv_map[temp]
-                temp = ""
+    inv_map = json.loads(map_bytes_read)
+    temp = ""
+    output = ""
+    for i in r:
+        temp += i
+        if (temp in inv_map):
+            output += inv_map[temp]
+            temp = ""
 
-        with open(output_filename, "wt") as f:
-            f.write(output)
-
-      
-filename = "example_texts\E.coli"
-HuffmanCoding.decompress_file("test", "test_decomp")
+    with open(output_filename, "wt") as f:
+        f.write(output)

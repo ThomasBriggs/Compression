@@ -122,10 +122,9 @@ r = ""
 for i in read_byte_array:
     r += format(i, '08b')
 r = r[pad_amount::]
-print(r)
+print(len(r))
 
 inv_map = {v: k for k, v in encoding_map.items()}
-print(inv_map)
 
 temp = ""
 output = ""
@@ -136,11 +135,3 @@ for i in r:
         temp = ""
 print(output)
 
-testFile = open("map", "wb")
-testFile.write(pickle.dumps(inv_map))
-testFile.close
-
-testFile = open("map", "rb")
-read_map = pickle.load(testFile)
-testFile.close
-print(read_map)

@@ -30,6 +30,22 @@ class Branch(Node):
         self.right = right
         super().__init__(left.freq + right.freq)
 
+    def get_values(self):
+        if isinstance(self.left, Leaf):
+            left_val = self.left.val
+        else:
+            left_val = self.left.get_values()
+
+        if isinstance(self.right, Leaf):
+            right_val = self.right.val
+        else:
+            right_val = self.right.get_values()
+
+        return left_val + right_val
+
+    def __repr__(self):
+        return f'{self.get_values()}:{self.freq}'
+
 
 class Tree:
     def __init__(self, string):
@@ -56,65 +72,67 @@ class Tree:
             heappush(h, Leaf(i, dict[i]))
         return h
 
+    def test(self, string):
+        return self.__heap_dict(self.__get_freq(string))
 
-class EncodingMap:
-    def __init__(self, tree: Tree):
+
+class HuffmanCoding:
+    def __init__(self, string):
         self.encoding_map = {}
+        self.string = string
+        tree = Tree(string)
         self.__create_map(tree)
 
     def __create_map(self, tree: Tree):
         root = tree.root
         if isinstance(root, Leaf):
-            self.encoding_map[root.val] = 0
+            self.encoding_map[root.val] = "0"
         else:
-            self.__rec_create_map(root.left, 0)
-            self.__rec_create_map(root.right, 1)
+            self.__rec_create_map(root.left, "0")
+            self.__rec_create_map(root.right, "1")
 
-    def __rec_create_map(self, node: Node, num: bin):
+    def __rec_create_map(self, node: Node, num: str):
         if isinstance(node, Leaf):
             self.encoding_map[node.val] = num
         else:
-            self.__rec_create_map(node.left, num << 1)
-            self.__rec_create_map(node.right, (num << 1)+1)
+            self.__rec_create_map(node.left, num + "0")
+            self.__rec_create_map(node.right, num + "1")
 
-    def getMap(self):
+    def get_encoding_map(self):
         return self.encoding_map
 
-    def getMapBin(self):
-        temp_map = self.encoding_map
-        for i in temp_map:
-            temp_map[i] = format(temp_map[i], 'b')
-        return temp_map
+    def encode(self, pad=True):
+        o = ""
+        for i in self.string:
+            o += self.encoding_map[i]
+        if not pad:
+            return o
+        else:
+            return self.__pad(o)
 
+    def __pad(self, string):
+        pad_amount = (8-(len(string) % 8))
+        padding = "0"*pad_amount
+        return (padding+string, pad_amount)
 
-test_string = "Hello, World! This is a test string"
-test_string2 = "a"*15+"b"*7+"c"*6+"d"*6+"e"*5
+filename = "bee_movie"
 
-tree = Tree(test_string2)
-encoding_tree = EncodingMap(tree)
+with open(filename, "rt") as f:
+    string = f.read()
 
-encoding_map = encoding_tree.getMapBin()
-o = ""
-for i in test_string2:
-    o += encoding_map[i]
-
-def pad(string):
-    pad_amount = (8-(len(string)%8))
-    padding = "0"*pad_amount
-    return (padding+string, pad_amount)
-
-padded_string, pad_amount = pad(o)
+huffman_tree = HuffmanCoding(string)
+padded_string, pad_amount = huffman_tree.encode()
 
 byte_array = bytearray()
 for i in range(0, len(padded_string), 8):
     byte = padded_string[i:i+8]
     byte_array.append(int(byte, 2))
 
-newFile = open("test.txt", "wb")
+newFile = open(filename + "_comp", "wb")
 newFile.write(byte_array)
 newFile.close
 
-newFile = open("test.txt", "rb")
+newFile = open(filename + "_comp", "rb")
 data = newFile.read()
 read_byte_array = bytearray(data)
 
@@ -122,9 +140,8 @@ r = ""
 for i in read_byte_array:
     r += format(i, '08b')
 r = r[pad_amount::]
-print(len(r))
 
-inv_map = {v: k for k, v in encoding_map.items()}
+inv_map = {v: k for k, v in huffman_tree.get_encoding_map().items()}
 
 temp = ""
 output = ""
@@ -133,5 +150,3 @@ for i in r:
     if (temp in inv_map):
         output += inv_map[temp]
         temp = ""
-print(output)
-

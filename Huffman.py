@@ -122,7 +122,8 @@ class HuffmanCoding:
         return compressed_text_bytes, int(pad_amount)
 
     def __map_to_bytearray(self):
-        return bytes(json.dumps(self.get_decoding_map()), "utf-8"), len(map_bytes)
+        map_bytes = bytes(json.dumps(self.get_decoding_map()), "utf-8")
+        return map_bytes, len(map_bytes)
 
     def compress_to_file(self, filename):
         text_bytes, pad_amount = self.__text_to_bytearray()
@@ -158,6 +159,7 @@ def decompress_file(input_filename, output_filename):
     inv_map = json.loads(map_bytes_read)
     with open(output_filename, "wt") as f:
         f.write(HuffmanCoding.decode(r, inv_map))
+
 
 if __name__ == '__main__':
     with open("example_texts\example1", "rt") as f:

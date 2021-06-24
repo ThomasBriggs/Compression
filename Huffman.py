@@ -2,45 +2,59 @@ from heapq import *
 import json
 
 
-class Node:
-    def __init__(self, children= None, value=None, freq=None):
-        if children is not None:
-            self.left = children[0]
-            self.right = children[1]
-            self.freq = self.right.freq + self.left.freq
-            self.value = self.left.__get_value() + self.right.__get_value()
-        else:
-            self.left = None
-            self.right = None
-            self.value = value
-            self.freq = freq
+class HuffmanCoding:
+    class Tree:
 
-    def __lt__(self, o):
-        if isinstance(o, Node):
-            return self.freq < o.freq
-        return False
+        class Node:
+            def __init__(self, children=None, value=None, freq=None):
+                if children is not None:
+                    self.left = children[0]
+                    self.right = children[1]
+                    self.freq = self.right.freq + self.left.freq
+                    self.value = self.left.__get_value() + self.right.__get_value()
+                else:
+                    self.left = None
+                    self.right = None
+                    self.value = value
+                    self.freq = freq
 
-    def __get_value(self):
-        if self.left is None and self.right is None:
-            return self.value
-        else:
-            return self.left.__get_value() + self.right.__get_value()
+            def __lt__(self, o):
+                if isinstance(o, HuffmanCoding.Tree.Node):
+                    return self.freq < o.freq
+                return False
 
-    def __repr__(self):
-        return f'{self.__get_value()}:{self.freq}'
+            def __get_value(self):
+                if self.left is None and self.right is None:
+                    return self.value
+                else:
+                    return self.left.__get_value() + self.right.__get_value()
 
-    def is_leaf(self):
-        return self.left is None or self.right is None
+            def __repr__(self):
+                return f'{self.__get_value()}:{self.freq}'
 
-class Tree:
+            def is_leaf(self):
+                return self.left is None or self.right is None
+
+        def __init__(self, freq_dict):
+            heap = self.__heap_dict(freq_dict)
+            while (len(heap) > 1):
+                left = heappop(heap)
+                right = heappop(heap)
+                temp = HuffmanCoding.Tree.Node([left, right])
+                heappush(heap, temp)
+            self.root = heappop(heap)
+
+        def __heap_dict(self, dict):
+            h = []
+            for i in dict:
+                heappush(h, self.Node(value=i, freq=dict[i]))
+            return h
+
     def __init__(self, string):
-        heap = self.__heap_dict(self.__get_freq(string))
-        while (len(heap) > 1):
-            left = heappop(heap)
-            right = heappop(heap)
-            temp = Node([left, right])
-            heappush(heap, temp)
-        self.root = heappop(heap)
+        self.encoding_map = {}
+        self.string = string
+        tree = HuffmanCoding.Tree(self.__get_freq(string))
+        self.__create_map(tree)
 
     def __get_freq(self, string):
         output_dict = {}
@@ -51,23 +65,6 @@ class Tree:
                 output_dict[i] = 1
         return output_dict
 
-    def __heap_dict(self, dict):
-        h = []
-        for i in dict:
-            heappush(h, Node(value=i, freq=dict[i]))
-        return h
-
-    def test(self, string):
-        return self.__heap_dict(self.__get_freq(string))
-
-
-class HuffmanCoding:
-    def __init__(self, string):
-        self.encoding_map = {}
-        self.string = string
-        tree = Tree(string)
-        self.__create_map(tree)
-
     def __create_map(self, tree):
         root = tree.root
         if root.is_leaf():
@@ -76,7 +73,7 @@ class HuffmanCoding:
             self.__rec_create_map(root.left, "0")
             self.__rec_create_map(root.right, "1")
 
-    def __rec_create_map(self, node: Node, num: str):
+    def __rec_create_map(self, node, num: str):
         if node.is_leaf():
             self.encoding_map[node.value] = num
         else:
@@ -137,11 +134,13 @@ class HuffmanCoding:
             f.write(map_bytes)
             f.write(text_bytes)
 
+
 def compress_file(input_filename, output_filename):
     with open(input_filename, "rt") as f:
         string = f.read()
     huffman_tree = HuffmanCoding(string)
     huffman_tree.compress_to_file(output_filename)
+
 
 def decompress_file(input_filename, output_filename):
     with open(input_filename, "rb") as f:
@@ -166,6 +165,7 @@ def decompress_file(input_filename, output_filename):
 
     with open(output_filename, "wt") as f:
         f.write(output)
+
 
 if __name__ == '__main__':
     with open("example_texts\example1", "rt") as f:

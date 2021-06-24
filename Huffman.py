@@ -3,49 +3,34 @@ import json
 
 
 class Node:
-    def __init__(self, freq):
-        self.freq = freq
+    def __init__(self, children= None, value=None, freq=None):
+        if children is not None:
+            self.left = children[0]
+            self.right = children[1]
+            self.freq = self.right.freq + self.left.freq
+            self.value = self.left.__get_value() + self.right.__get_value()
+        else:
+            self.left = None
+            self.right = None
+            self.value = value
+            self.freq = freq
 
     def __lt__(self, o):
         if isinstance(o, Node):
             return self.freq < o.freq
         return False
 
-
-class Leaf(Node):
-    def __init__(self, value, freq):
-        self.val = value
-        super().__init__(freq)
-
-    def __str__(self):
-        return 'Value: {0}, Frequency: {1}'.format(self.val, self.freq)
+    def __get_value(self):
+        if self.left is None and self.right is None:
+            return self.value
+        else:
+            return self.left.__get_value() + self.right.__get_value()
 
     def __repr__(self):
-        return f'{self.val}:{self.freq}'
+        return f'{self.__get_value()}:{self.freq}'
 
-
-class Branch(Node):
-    def __init__(self, left: Node, right: Node):
-        self.left = left
-        self.right = right
-        super().__init__(left.freq + right.freq)
-
-    def get_values(self):
-        if isinstance(self.left, Leaf):
-            left_val = self.left.val
-        else:
-            left_val = self.left.get_values()
-
-        if isinstance(self.right, Leaf):
-            right_val = self.right.val
-        else:
-            right_val = self.right.get_values()
-
-        return left_val + right_val
-
-    def __repr__(self):
-        return f'{self.get_values()}:{self.freq}'
-
+    def is_leaf(self):
+        return self.left is None or self.right is None
 
 class Tree:
     def __init__(self, string):
@@ -53,7 +38,7 @@ class Tree:
         while (len(heap) > 1):
             left = heappop(heap)
             right = heappop(heap)
-            temp = Branch(left, right)
+            temp = Node([left, right])
             heappush(heap, temp)
         self.root = heappop(heap)
 
@@ -69,7 +54,7 @@ class Tree:
     def __heap_dict(self, dict):
         h = []
         for i in dict:
-            heappush(h, Leaf(i, dict[i]))
+            heappush(h, Node(value=i, freq=dict[i]))
         return h
 
     def test(self, string):
@@ -83,17 +68,17 @@ class HuffmanCoding:
         tree = Tree(string)
         self.__create_map(tree)
 
-    def __create_map(self, tree: Tree):
+    def __create_map(self, tree):
         root = tree.root
-        if isinstance(root, Leaf):
-            self.encoding_map[root.val] = "0"
+        if root.is_leaf():
+            self.encoding_map[root.value] = "0"
         else:
             self.__rec_create_map(root.left, "0")
             self.__rec_create_map(root.right, "1")
 
     def __rec_create_map(self, node: Node, num: str):
-        if isinstance(node, Leaf):
-            self.encoding_map[node.val] = num
+        if node.is_leaf():
+            self.encoding_map[node.value] = num
         else:
             self.__rec_create_map(node.left, num + "0")
             self.__rec_create_map(node.right, num + "1")

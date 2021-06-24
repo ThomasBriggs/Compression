@@ -53,12 +53,12 @@ class HuffmanCoding:
     def __init__(self, string):
         self.encoding_map = {}
         self.string = string
-        tree = HuffmanCoding.Tree(self.__get_freq(string))
+        tree = HuffmanCoding.Tree(self.get_freq())
         self.__create_map(tree)
 
-    def __get_freq(self, string):
+    def get_freq(self):
         output_dict = {}
-        for i in string:
+        for i in self.string:
             if (i in output_dict):
                 output_dict[i] += 1
             else:
@@ -87,9 +87,10 @@ class HuffmanCoding:
         return {v: k for k, v in self.encoding_map.items()}
 
     def encode(self, pad=True):
-        o = ""
+        o = []
         for i in self.string:
-            o += self.encoding_map[i]
+            o.append(self.encoding_map[i])
+        o = ''.join(o)
         if not pad:
             return o
         else:
@@ -100,16 +101,17 @@ class HuffmanCoding:
         padding = "0"*pad_amount
         return (padding+string, pad_amount)
 
-    def decode(self, string):
+    @staticmethod
+    def decode(string, decoding_map):
         temp = ""
-        output = ""
-        inv_map = self.get_decoding_map()
+        output = []
+        inv_map = decoding_map
         for i in string:
             temp += i
             if (temp in inv_map):
-                output += inv_map[temp]
+                output.append(inv_map[temp])
                 temp = ""
-        return output
+        return ''.join(output)
 
     def __text_to_bytearray(self):
         compressed_text_bytes = bytearray()
@@ -120,8 +122,7 @@ class HuffmanCoding:
         return compressed_text_bytes, int(pad_amount)
 
     def __map_to_bytearray(self):
-        map_bytes = bytearray(json.dumps(self.get_decoding_map()), "utf-8")
-        return map_bytes, len(map_bytes)
+        return bytes(json.dumps(self.get_decoding_map()), "utf-8"), len(map_bytes)
 
     def compress_to_file(self, filename):
         text_bytes, pad_amount = self.__text_to_bytearray()
@@ -149,27 +150,17 @@ def decompress_file(input_filename, output_filename):
         map_bytes_read = f.read(int.from_bytes(map_size_read, "big"))
         compressed_text_bytes_read = f.read()
 
-    r = ""
+    r = []
     for i in compressed_text_bytes_read:
-        r += format(i, '08b')
-    r = r[pad_amount_read::]
+        r.append(format(i, '08b'))
+    r = ''.join(r[pad_amount_read::])
 
     inv_map = json.loads(map_bytes_read)
-    temp = ""
-    output = ""
-    for i in r:
-        temp += i
-        if (temp in inv_map):
-            output += inv_map[temp]
-            temp = ""
-
     with open(output_filename, "wt") as f:
-        f.write(output)
-
+        f.write(HuffmanCoding.decode(r, inv_map))
 
 if __name__ == '__main__':
     with open("example_texts\example1", "rt") as f:
         string = f.read()
     huffman = HuffmanCoding(string)
-    hmap = huffman.get_encoding_map()
-    print(hmap)
+    print(string == HuffmanCoding.decode(huffman.encode(False), huffman.get_decoding_map()))

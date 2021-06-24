@@ -20,5 +20,3 @@ elif args.decompress:
         Huffman.decompress_file(args.filename, args.output_filename)
     else:
         Huffman.decompress_file(args.filename, "output")
-else:
-    print(args.filename)

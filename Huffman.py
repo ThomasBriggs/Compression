@@ -181,3 +181,10 @@ def decompress_file(input_filename, output_filename):
 
     with open(output_filename, "wt") as f:
         f.write(output)
+
+if __name__ == '__main__':
+    with open("example_texts\example1", "rt") as f:
+        string = f.read()
+    huffman = HuffmanCoding(string)
+    hmap = huffman.get_encoding_map()
+    print(hmap)
